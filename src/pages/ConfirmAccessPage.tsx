@@ -1,12 +1,12 @@
 import { useEffect } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import axios from "axios";
-import { useAuth } from "../context/useAuth"; // 🟢 Importa el contexto
+import { useAuth } from "../context/useAuth"; 
 
 export default function ConfirmAccessPage() {
   const location = useLocation();
   const navigate = useNavigate();
-  const { setUser } = useAuth(); // 🟢 Contexto global
+  const { setUser } = useAuth();
   const token = new URLSearchParams(location.search).get("token");
 
   useEffect(() => {
@@ -36,7 +36,7 @@ export default function ConfirmAccessPage() {
         };
 
         localStorage.setItem("user", JSON.stringify(user));
-        setUser(user); // 🟢 Actualiza el contexto
+        setUser(user); 
 
         alert("✅ Acceso confirmado correctamente");
 
