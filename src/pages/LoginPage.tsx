@@ -2,7 +2,7 @@
 import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import axios from "axios";
-import { useAuth } from "../context/useAuth"; // ✅ IMPORTANTE
+import { useAuth } from "../context/useAuth";
 import "../styles/auth.css";
 
 export default function LoginPage() {
@@ -12,7 +12,7 @@ export default function LoginPage() {
   const [, setScrolled] = useState(false);
   const navigate = useNavigate();
 
-  const { setUser } = useAuth(); // ✅ Usa el contexto aquí
+  const { setUser } = useAuth(); 
 
   useEffect(() => {
     const handleScroll = () => setScrolled(window.scrollY > 20);
@@ -54,7 +54,7 @@ export default function LoginPage() {
         localStorage.setItem("token", accessToken);
         localStorage.setItem("user", JSON.stringify(user));
 
-        // ✅ Actualizar el AuthContext
+      
         setUser(user);
 
         // Redirigir según rol
