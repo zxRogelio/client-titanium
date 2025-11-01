@@ -2,8 +2,7 @@
 import { useState, useEffect } from "react";
 import QRCode from "qrcode";
 import { API } from "../api/api";
-import "../styles/configuracion.css"; // Asegúrate que tengas tu diseño aplicado
-
+import "../styles/configuracion.css"; 
 export default function ConfiguracionPage() {
   const [selectedMethod, setSelectedMethod] = useState("normal");
   const [qr, setQR] = useState<string | null>(null);
@@ -13,7 +12,7 @@ export default function ConfiguracionPage() {
     const user = JSON.parse(localStorage.getItem("user") || "{}");
     if (user?.email) {
       setEmail(user.email);
-      fetchCurrentMethod(); // ⬅️ Carga método actual
+      fetchCurrentMethod();
     }
   }, []);
 
@@ -42,7 +41,7 @@ export default function ConfiguracionPage() {
       );
             if (selectedMethod === "totp") {
             const res = await API.post("/auth/generate-totp", { email });
-            const qrImage = await QRCode.toDataURL(res.data.otpauth_url); // ✅ Usa otpauth_url
+            const qrImage = await QRCode.toDataURL(res.data.otpauth_url); 
             setQR(qrImage);
             } else {
             setQR(null);
