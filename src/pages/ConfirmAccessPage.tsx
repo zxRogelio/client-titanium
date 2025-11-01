@@ -1,10 +1,12 @@
 import { useEffect } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import axios from "axios";
+import { useAuth } from "../context/useAuth"; // 🟢 Importa el contexto
 
 export default function ConfirmAccessPage() {
   const location = useLocation();
   const navigate = useNavigate();
+  const { setUser } = useAuth(); // 🟢 Contexto global
   const token = new URLSearchParams(location.search).get("token");
 
   useEffect(() => {
@@ -24,27 +26,24 @@ export default function ConfirmAccessPage() {
         const { token: accessToken } = res.data;
         if (!accessToken) throw new Error("Token inválido");
 
-        // 🟢 Guardar el token en localStorage
         localStorage.setItem("token", accessToken);
-
-        // Decodificar JWT
         const payload = JSON.parse(atob(accessToken.split(".")[1]));
 
         const user = {
           id: payload.id,
-          role: payload.role,
+          rol: payload.role,
           email: payload.email,
         };
 
         localStorage.setItem("user", JSON.stringify(user));
+        setUser(user); // 🟢 Actualiza el contexto
 
         alert("✅ Acceso confirmado correctamente");
 
-        // 🟢 Redirigir según el rol
         setTimeout(() => {
-          if (user.role === "cliente") navigate("/cliente", { replace: true });
-          else if (user.role === "entrenador") navigate("/entrenador", { replace: true });
-          else if (user.role === "admin") navigate("/admin", { replace: true });
+          if (user.rol === "cliente") navigate("/cliente", { replace: true });
+          else if (user.rol === "entrenador") navigate("/entrenador", { replace: true });
+          else if (user.rol === "admin") navigate("/admin", { replace: true });
           else navigate("/", { replace: true });
         }, 1000);
       } catch (err) {
@@ -55,7 +54,7 @@ export default function ConfirmAccessPage() {
     };
 
     confirmarAcceso();
-  }, [token, navigate]);
+  }, [token, navigate, setUser]);
 
   return (
     <div style={{ padding: "3rem", textAlign: "center" }}>

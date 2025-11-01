@@ -2,6 +2,7 @@
 import { useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { API } from "../api/api";
+import { useAuth } from "../context/useAuth"; // 🟢 Importa el contexto
 
 export default function LoginTOTP() {
   const [code, setCode] = useState("");
@@ -9,6 +10,7 @@ export default function LoginTOTP() {
   const navigate = useNavigate();
   const location = useLocation();
   const email = location.state?.email;
+  const { setUser } = useAuth(); // 🟢 Contexto global
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -29,6 +31,7 @@ export default function LoginTOTP() {
 
       localStorage.setItem("token", token);
       localStorage.setItem("user", JSON.stringify(user));
+      setUser(user); // 🟢 Actualiza el contexto inmediatamente
 
       switch (user.rol) {
         case "cliente":

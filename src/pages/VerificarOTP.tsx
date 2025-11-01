@@ -3,12 +3,14 @@
 import { useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { API } from "../api/api";
+import { useAuth } from "../context/useAuth"; // 🟢 Importa el contexto
 
 export default function VerificarOTP() {
   const [otp, setOtp] = useState("");
   const [loading, setLoading] = useState(false);
   const location = useLocation();
   const navigate = useNavigate();
+  const { setUser } = useAuth(); // 🟢 Contexto global
 
   const email = location.state?.email;
 
@@ -18,10 +20,12 @@ export default function VerificarOTP() {
     try {
       const res = await API.post("/auth/verify-otp", { email, otp });
 
-      localStorage.setItem("token", res.data.accessToken);
-      localStorage.setItem("user", JSON.stringify(res.data.user));
+      const { accessToken, user } = res.data;
+      localStorage.setItem("token", accessToken);
+      localStorage.setItem("user", JSON.stringify(user));
+      setUser(user); // 🟢 Actualiza el contexto
 
-      switch (res.data.user.rol) {
+      switch (user.rol) {
         case "cliente":
           navigate("/cliente");
           break;

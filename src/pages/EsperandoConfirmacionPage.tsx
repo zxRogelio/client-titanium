@@ -37,7 +37,7 @@ export default function EsperandoConfirmacionPage() {
         </div>
 
         <p style={{ marginTop: "2rem", fontSize: "1.1rem", color: "#333" }}>
-          Esta pestaña se cerrará automáticamente una vez que confirmes tu acceso.
+Cerrar esta pestaña una vez terminado el logeo
         </p>
       </main>
     </div>
