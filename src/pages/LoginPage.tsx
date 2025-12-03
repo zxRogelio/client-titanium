@@ -224,13 +224,11 @@ export default function LoginPage() {
                   onClick={handleGoogleLogin}
                 >
                   <span className="google-logo-wrap">
-                                                <img
-                  src={GoogleLogo}
-                  alt="Google"
-                  className="google-logo"
-                />
-
-
+                    <img
+                      src={GoogleLogo}
+                      alt="Google"
+                      className="google-logo"
+                    />
                   </span>
                   <span>Continuar con Google</span>
                 </button>

@@ -27,13 +27,17 @@ export default function ConfirmAccessPage() {
         const accessToken = res.data.token;
         if (!accessToken) throw new Error("Token inválido");
 
+        // Guardar token final de sesión
         localStorage.setItem("token", accessToken);
+
         const payload = JSON.parse(atob(accessToken.split(".")[1]));
 
         const user = {
           id: payload.id,
           rol: payload.role,
           email: payload.email,
+          // si en el JWT viene loginMethod, lo podrías leer así:
+          // loginMethod: (payload.loginMethod as "local" | "google") || "local",
         };
 
         localStorage.setItem("user", JSON.stringify(user));
@@ -45,7 +49,7 @@ export default function ConfirmAccessPage() {
           if (user.rol === "cliente") navigate("/cliente", { replace: true });
           else if (user.rol === "entrenador")
             navigate("/entrenador", { replace: true });
-          else if (user.rol === "admin")
+          else if (user.rol === "admin" || user.rol === "administrador")
             navigate("/admin", { replace: true });
           else navigate("/", { replace: true });
         }, 1000);
@@ -60,7 +64,6 @@ export default function ConfirmAccessPage() {
         if (msg.toLowerCase().includes("expirado")) {
           alert("El enlace expiró, vuelve a iniciar sesión.");
         } else if (msg) {
-          // 🔍 Muestra el mensaje real del backend para que lo veas
           alert(`Error al confirmar acceso: ${msg}`);
         } else {
           alert("El enlace es inválido o ya fue utilizado.");

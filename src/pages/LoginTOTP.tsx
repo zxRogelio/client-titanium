@@ -43,6 +43,8 @@ export default function LoginTOTP() {
         id: payload.id,
         rol: payload.role,
         email,
+        // Si el backend manda loginMethod en el JWT, lo usamos; si no, asumimos "local"
+        loginMethod: (payload.loginMethod as "local" | "google") || "local",
       };
 
       localStorage.setItem("token", token);

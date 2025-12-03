@@ -1,4 +1,3 @@
-// src/pages/Configuracion2FA.tsx
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { useState, useEffect } from "react";
 import QRCode from "qrcode";
@@ -18,6 +17,26 @@ export default function Configuracion2FA() {
   const [isGoogleSession, setIsGoogleSession] = useState(false);
   const [loading, setLoading] = useState(false);
 
+  // 🔹 Traer método actual desde el backend
+  const fetchCurrentMethod = async () => {
+    try {
+      const token = localStorage.getItem("token");
+      if (!token) return;
+
+      const res = await API.get("/user/profile", {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+
+      console.log("🔍 Perfil recibido en Configuracion2FA:", res.data);
+
+      if (res.data?.authMethod) {
+        setSelectedMethod(res.data.authMethod);
+      }
+    } catch (err: any) {
+      console.error(" Error al obtener método actual:", err);
+    }
+  };
+
   // Al montar: revisamos si la sesión es Google o local
   useEffect(() => {
     const raw = localStorage.getItem("user");
@@ -35,28 +54,9 @@ export default function Configuracion2FA() {
       }
     }
 
-    // Solo si no es sesión Google consultamos al backend
+    // Solo si NO es sesión Google consultamos al backend
     fetchCurrentMethod();
   }, []);
-
-  const fetchCurrentMethod = async () => {
-    try {
-      const token = localStorage.getItem("token");
-      if (!token) return;
-
-      const res = await API.get("/user/profile", {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-
-      console.log("🔍 Perfil recibido en ConfiguracionPage:", res.data);
-
-      if (res.data?.authMethod) {
-        setSelectedMethod(res.data.authMethod);
-      }
-    } catch (err: any) {
-      console.error(" Error al obtener método actual:", err);
-    }
-  };
 
   const handleUpdateMethod = async () => {
     if (isGoogleSession) {
@@ -75,7 +75,7 @@ export default function Configuracion2FA() {
         return;
       }
 
-      // 1) Actualizar método
+      // 1) Actualizar método en el backend
       await API.patch(
         "/user/update-auth-method",
         { authMethod: selectedMethod },
