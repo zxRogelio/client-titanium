@@ -30,6 +30,7 @@ export default function App() {
       <AuthProvider>
         <Routes>
           <Route element={<Layout />}>
+            console.log("🚀 App montada en producción");
             <Route path="/" element={<HomePage />} />
             <Route path="/oauth-callback" element={<OAuthCallbackPage />} />
             <Route path="/login" element={<LoginPage />} />
