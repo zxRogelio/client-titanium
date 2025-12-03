@@ -3,7 +3,7 @@ import { useState, useEffect, useRef, useCallback } from "react";
 import { AuthContext, type User } from "./AuthContext";
 import type { ReactNode } from "react";
 
-const INACTIVITY_LIMIT_MS = 1 * 60_000; 
+const INACTIVITY_LIMIT_MS = 1 * 60000; 
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
