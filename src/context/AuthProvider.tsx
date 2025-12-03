@@ -1,15 +1,17 @@
 // src/context/AuthProvider.tsx
 import { useState, useEffect, useRef, useCallback } from "react";
+import { useNavigate } from "react-router-dom";
 import { AuthContext, type User } from "./AuthContext";
 import type { ReactNode } from "react";
 
-const INACTIVITY_LIMIT_MS = 1 * 60_000; 
+const INACTIVITY_LIMIT_MS = 15 * 60_000; // 15 minutos
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
   const inactivityTimerRef = useRef<number | null>(null);
+  const navigate = useNavigate();
 
   const clearInactivityTimer = useCallback(() => {
     if (inactivityTimerRef.current !== null) {
@@ -23,7 +25,10 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     localStorage.removeItem("token");
     setUser(null);
     clearInactivityTimer();
-  }, [clearInactivityTimer]);
+
+    // 👇 Al cerrar sesión (manual o por inactividad) manda al login
+    navigate("/login", { replace: true });
+  }, [clearInactivityTimer, navigate]);
 
   const startInactivityTimer = useCallback(() => {
     clearInactivityTimer();
