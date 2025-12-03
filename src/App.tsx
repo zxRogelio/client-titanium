@@ -27,7 +27,7 @@ export default function App() {
               console.log("🚀 App montada en producción");
 
   return (
-    <BrowserRouter basename="/titanium">
+    <BrowserRouter>
       <AuthProvider>
         <Routes>
           <Route element={<Layout />}>
