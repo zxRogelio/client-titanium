@@ -818,3 +818,34 @@ body {
   0% { transform: rotate(0deg); }
   100% { transform: rotate(360deg); }
 }
+.auth-btn-google {
+  margin-top: 0.75rem;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  border-radius: 999px;
+  border: 1px solid #ddd;
+  padding: 0.6rem 1rem;
+  background: #fff;
+  cursor: pointer;
+  font-weight: 500;
+}
+
+.auth-btn-google:hover {
+  background: #f7f7f7;
+}
+
+.google-logo-wrap {
+  width: 20px;
+  height: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.google-logo {
+  width: 18px;
+  height: 18px;
+}

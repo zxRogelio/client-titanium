@@ -60,13 +60,6 @@ export default function NavbarCliente() {
             {menuOpen && (
               <div className="dropdown-menu">
                 <Link
-                  to="/cliente/perfil"
-                  className="dropdown-link"
-                  onClick={() => setMenuOpen(false)}
-                >
-                  👤 Perfil
-                </Link>
-                <Link
                   to="/cliente/configuracion"
                   className="dropdown-link"
                   onClick={() => setMenuOpen(false)}

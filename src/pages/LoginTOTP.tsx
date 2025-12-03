@@ -1,19 +1,35 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 // src/pages/LoginTOTP.tsx
-import { useState } from "react";
-import { useNavigate, useLocation } from "react-router-dom";
+import { useState, useEffect } from "react";
+import { useNavigate, useLocation, useSearchParams } from "react-router-dom";
 import { API } from "../api/api";
-import { useAuth } from "../context/useAuth"; // 🟢 Importa el contexto
+import { useAuth } from "../context/useAuth";
 
 export default function LoginTOTP() {
   const [code, setCode] = useState("");
   const [loading, setLoading] = useState(false);
+
   const navigate = useNavigate();
   const location = useLocation();
-  const email = location.state?.email;
-  const { setUser } = useAuth(); // 🟢 Contexto global
+  const [searchParams] = useSearchParams();
+  const { setUser } = useAuth();
+
+  // 🔹 Email puede venir del estado (login normal) o de la query (?email=...&oauth=1)
+  const emailFromState = (location.state as any)?.email;
+  const emailFromQuery = searchParams.get("email");
+  const email = emailFromState || emailFromQuery || "";
+
+  // 🔹 Si no tenemos email de ningún lado, regresamos al login
+  useEffect(() => {
+    if (!email) {
+      navigate("/login");
+    }
+  }, [email, navigate]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!email) return; // seguridad extra
+
     setLoading(true);
     try {
       const res = await API.post("/auth/verify-totp", { email, code });
@@ -31,7 +47,7 @@ export default function LoginTOTP() {
 
       localStorage.setItem("token", token);
       localStorage.setItem("user", JSON.stringify(user));
-      setUser(user); // 🟢 Actualiza el contexto inmediatamente
+      setUser(user);
 
       switch (user.rol) {
         case "cliente":
@@ -41,6 +57,7 @@ export default function LoginTOTP() {
           navigate("/entrenador");
           break;
         case "admin":
+        case "administrador":
           navigate("/admin");
           break;
         default:
@@ -85,8 +102,13 @@ export default function LoginTOTP() {
         >
           Verificación por Código TOTP
         </h2>
-        <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column" }}>
-          <label style={{ marginBottom: "8px", fontSize: "15px", color: "#333" }}>
+        <form
+          onSubmit={handleSubmit}
+          style={{ display: "flex", flexDirection: "column" }}
+        >
+          <label
+            style={{ marginBottom: "8px", fontSize: "15px", color: "#333" }}
+          >
             Ingresa el código de 6 dígitos:
           </label>
           <input

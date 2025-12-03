@@ -20,13 +20,18 @@ import EsperandoConfirmacionPage from "./pages/EsperandoConfirmacionPage";
 import ForgotPassword from "./pages/ForgotPassword";
 import VerifyResetCode from "./pages/VerifyResetCode";
 import NewPassword from "./pages/NewPassword";
+import OAuthCallbackPage from "./pages/OAuthCallbackPage";
+
+
+
 export default function App() {
   return (
-    <BrowserRouter>
+    <BrowserRouter basename="/titanium">
       <AuthProvider>
         <Routes>
           <Route element={<Layout />}>
             <Route path="/" element={<HomePage />} />
+            <Route path="/oauth-callback" element={<OAuthCallbackPage />} />
             <Route path="/login" element={<LoginPage />} />
             <Route path="/register" element={<RegisterPage />} />
             <Route path="/catalogue" element={<CatalogePage />} />

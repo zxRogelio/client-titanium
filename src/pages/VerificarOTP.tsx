@@ -1,7 +1,7 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
+/* eslint-disable @typescript-eslint/no-explicit-any */
 // src/pages/VerificarOTP.tsx
 import { useState } from "react";
-import { useLocation, useNavigate } from "react-router-dom";
+import { useLocation, useNavigate, useSearchParams } from "react-router-dom";
 import { API } from "../api/api";
 import { useAuth } from "../context/useAuth"; // 🟢 Importa el contexto
 
@@ -11,12 +11,24 @@ export default function VerificarOTP() {
   const location = useLocation();
   const navigate = useNavigate();
   const { setUser } = useAuth(); // 🟢 Contexto global
+  const [searchParams] = useSearchParams();
 
-  const email = location.state?.email;
+  // 🟣 Email puede venir del state (login normal) o de la query (?email=...&oauth=1)
+  const emailFromState = (location.state as any)?.email;
+  const emailFromQuery = searchParams.get("email");
+  const email = emailFromState || emailFromQuery || "";
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
+
+    if (!email) {
+      alert("No se detectó el correo del usuario. Intenta iniciar sesión de nuevo.");
+      setLoading(false);
+      navigate("/login");
+      return;
+    }
+
     try {
       const res = await API.post("/auth/verify-otp", { email, otp });
 
@@ -39,6 +51,7 @@ export default function VerificarOTP() {
           navigate("/");
       }
     } catch (err) {
+      console.error("❌ Error verificando OTP:", err);
       alert("Código incorrecto o expirado.");
     } finally {
       setLoading(false);
@@ -76,8 +89,21 @@ export default function VerificarOTP() {
         >
           Verificación por Código (OTP)
         </h2>
-        <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column" }}>
-          <label style={{ marginBottom: "8px", fontSize: "15px", color: "#333" }}>
+
+        {/* Opcionalmente mostramos a qué correo se envió */}
+        {email && (
+          <p style={{ textAlign: "center", marginBottom: "10px", fontSize: "14px", color: "#555" }}>
+            Se envió un código a: <strong>{email}</strong>
+          </p>
+        )}
+
+        <form
+          onSubmit={handleSubmit}
+          style={{ display: "flex", flexDirection: "column" }}
+        >
+          <label
+            style={{ marginBottom: "8px", fontSize: "15px", color: "#333" }}
+          >
             Ingresa el código que recibiste por correo:
           </label>
           <input

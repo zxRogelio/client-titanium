@@ -1,9 +1,11 @@
+// src/context/AuthContext.tsx
 import { createContext } from "react";
 
 export interface User {
-  id: string;
+  id?: string;
   email: string;
   rol: "cliente" | "entrenador" | "admin";
+  loginMethod?: "local" | "google";
 }
 
 export interface AuthContextType {
@@ -12,4 +14,8 @@ export interface AuthContextType {
   logout: () => void;
 }
 
-export const AuthContext = createContext<AuthContextType | undefined>(undefined);
+export const AuthContext = createContext<AuthContextType>({
+  user: null,
+  setUser: () => {},
+  logout: () => {},
+});

@@ -1,12 +1,13 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { useEffect } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import axios from "axios";
-import { useAuth } from "../context/useAuth"; // 🟢 Importa el contexto
+import { useAuth } from "../context/useAuth";
 
 export default function ConfirmAccessPage() {
   const location = useLocation();
   const navigate = useNavigate();
-  const { setUser } = useAuth(); // 🟢 Contexto global
+  const { setUser } = useAuth();
   const token = new URLSearchParams(location.search).get("token");
 
   useEffect(() => {
@@ -23,7 +24,7 @@ export default function ConfirmAccessPage() {
           { token }
         );
 
-        const { token: accessToken } = res.data;
+        const accessToken = res.data.token;
         if (!accessToken) throw new Error("Token inválido");
 
         localStorage.setItem("token", accessToken);
@@ -36,19 +37,35 @@ export default function ConfirmAccessPage() {
         };
 
         localStorage.setItem("user", JSON.stringify(user));
-        setUser(user); // 🟢 Actualiza el contexto
+        setUser(user as any);
 
         alert("✅ Acceso confirmado correctamente");
 
         setTimeout(() => {
           if (user.rol === "cliente") navigate("/cliente", { replace: true });
-          else if (user.rol === "entrenador") navigate("/entrenador", { replace: true });
-          else if (user.rol === "admin") navigate("/admin", { replace: true });
+          else if (user.rol === "entrenador")
+            navigate("/entrenador", { replace: true });
+          else if (user.rol === "admin")
+            navigate("/admin", { replace: true });
           else navigate("/", { replace: true });
         }, 1000);
-      } catch (err) {
-        console.error("❌ Error al confirmar acceso:", err);
-        alert("El enlace expiró o es inválido");
+      } catch (err: any) {
+        console.error(
+          "❌ Error al confirmar acceso (frontend):",
+          err.response?.data || err
+        );
+
+        const msg: string = err?.response?.data?.error || "";
+
+        if (msg.toLowerCase().includes("expirado")) {
+          alert("El enlace expiró, vuelve a iniciar sesión.");
+        } else if (msg) {
+          // 🔍 Muestra el mensaje real del backend para que lo veas
+          alert(`Error al confirmar acceso: ${msg}`);
+        } else {
+          alert("El enlace es inválido o ya fue utilizado.");
+        }
+
         navigate("/login", { replace: true });
       }
     };

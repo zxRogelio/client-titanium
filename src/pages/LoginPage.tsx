@@ -2,17 +2,21 @@
 import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import axios from "axios";
-import { useAuth } from "../context/useAuth"; // ✅ IMPORTANTE
+import { useAuth } from "../context/useAuth";
+import { API } from "../api/api";
 import "../styles/auth.css";
+import GoogleLogo from "../assets/google-logo.svg";
 
 export default function LoginPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [, setScrolled] = useState(false);
-  const navigate = useNavigate();
+  const [errorMessage, setErrorMessage] = useState("");
+  const [loading, setLoading] = useState(false);
 
-  const { setUser } = useAuth(); // ✅ Usa el contexto aquí
+  const navigate = useNavigate();
+  const { setUser } = useAuth();
 
   useEffect(() => {
     const handleScroll = () => setScrolled(window.scrollY > 20);
@@ -22,43 +26,54 @@ export default function LoginPage() {
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    try {
-      const res = await axios.post(
-        `${import.meta.env.VITE_API_URL}/auth/login`,
-        { email, password }
-      );
+    setErrorMessage("");
+    setLoading(true);
 
-      // Si requiere autenticación 2FA
+    try {
+      const res = await API.post("/auth/login", { email, password });
+
+      // 🔐 Si requiere 2FA, solo redirigimos al flujo y NO guardamos sesión todavía
       if (res.data.twoFactorRequired) {
         const method = res.data.method?.toLowerCase();
 
         if (method === "totp") {
           navigate("/login-totp", { state: { email } });
+          setLoading(false);
           return;
         }
         if (method === "confirm-link") {
           navigate("/esperando-confirmacion", { state: { email } });
+          setLoading(false);
           return;
         }
         if (method === "otp") {
           navigate("/verificar-otp", { state: { email } });
+          setLoading(false);
           return;
         }
       }
 
-      // 🔹 Autenticación normal
+      // 🟢 Login normal (sin 2FA)
       const { accessToken, user } = res.data;
 
       if (accessToken && user) {
-        // Guardar en localStorage
+        // role viene a veces como 'role' y a veces como 'rol'
+        const userRole = user.role || user.rol || "cliente";
+
+        // 🔹 Usuario que guardamos EN EL FRONT
+        const userForStorage = {
+          id: user.id,
+          email: user.email,
+          rol: userRole as "cliente" | "entrenador" | "admin",
+          loginMethod: "local" as const, // 👈 MUY IMPORTANTE
+        };
+
         localStorage.setItem("token", accessToken);
-        localStorage.setItem("user", JSON.stringify(user));
+        localStorage.setItem("user", JSON.stringify(userForStorage));
+        setUser(userForStorage);
 
-        // ✅ Actualizar el AuthContext
-        setUser(user);
-
-        // Redirigir según rol
-        switch (user.rol) {
+        // Redirección por rol
+        switch (userRole) {
           case "cliente":
             navigate("/cliente");
             break;
@@ -66,6 +81,7 @@ export default function LoginPage() {
             navigate("/entrenador");
             break;
           case "admin":
+          case "administrador":
             navigate("/admin");
             break;
           default:
@@ -73,8 +89,34 @@ export default function LoginPage() {
         }
       }
     } catch (err: any) {
-      alert(err.response?.data?.error || "Error al iniciar sesión");
+      console.error("Error al iniciar sesión:", err);
+
+      if (axios.isAxiosError(err)) {
+        const status = err.response?.status;
+
+        if (status === 429) {
+          setErrorMessage(
+            "Has intentado iniciar sesión demasiadas veces. Intenta de nuevo más tarde."
+          );
+        } else if (status === 400 || status === 401) {
+          setErrorMessage("Correo o contraseña incorrectos.");
+        } else {
+          setErrorMessage(
+            "No se pudo iniciar sesión. Intenta de nuevo en unos momentos."
+          );
+        }
+      } else {
+        setErrorMessage("Error inesperado al iniciar sesión.");
+      }
+    } finally {
+      setLoading(false);
     }
+  };
+
+  // 🔹 Login con Google (OAuth)
+  const handleGoogleLogin = () => {
+    const baseUrl = import.meta.env.VITE_API_URL;
+    window.location.href = `${baseUrl}/auth/google`;
   };
 
   return (
@@ -96,6 +138,10 @@ export default function LoginPage() {
               </p>
 
               <form className="auth-form" onSubmit={handleLogin}>
+                {errorMessage && (
+                  <div className="auth-error">{errorMessage}</div>
+                )}
+
                 {/* Email */}
                 <div className="auth-input-group">
                   <label htmlFor="email" className="auth-label">
@@ -163,8 +209,30 @@ export default function LoginPage() {
                   </Link>
                 </div>
 
-                <button type="submit" className="auth-btn-primary">
-                  Iniciar Sesión
+                <button
+                  type="submit"
+                  className="auth-btn-primary"
+                  disabled={loading}
+                >
+                  {loading ? "Iniciando..." : "Iniciar Sesión"}
+                </button>
+
+                {/* 🔹 Botón Google */}
+                <button
+                  type="button"
+                  className="auth-btn-google"
+                  onClick={handleGoogleLogin}
+                >
+                  <span className="google-logo-wrap">
+                                                <img
+                  src={GoogleLogo}
+                  alt="Google"
+                  className="google-logo"
+                />
+
+
+                  </span>
+                  <span>Continuar con Google</span>
                 </button>
 
                 <p className="auth-footer">

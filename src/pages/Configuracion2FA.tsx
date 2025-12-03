@@ -1,58 +1,110 @@
-// src/pages/ConfiguracionPage.tsx
+// src/pages/Configuracion2FA.tsx
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { useState, useEffect } from "react";
 import QRCode from "qrcode";
 import { API } from "../api/api";
-import "../styles/configuracion.css"; // Asegúrate que tengas tu diseño aplicado
+import "../styles/configuracion.css";
 
-export default function ConfiguracionPage() {
+interface StoredUser {
+  id?: string;
+  email?: string;
+  rol?: string;
+  loginMethod?: "local" | "google";
+}
+
+export default function Configuracion2FA() {
   const [selectedMethod, setSelectedMethod] = useState("normal");
   const [qr, setQR] = useState<string | null>(null);
-  const [email, setEmail] = useState("");
+  const [isGoogleSession, setIsGoogleSession] = useState(false);
+  const [loading, setLoading] = useState(false);
 
+  // Al montar: revisamos si la sesión es Google o local
   useEffect(() => {
-    const user = JSON.parse(localStorage.getItem("user") || "{}");
-    if (user?.email) {
-      setEmail(user.email);
-      fetchCurrentMethod(); // ⬅️ Carga método actual
+    const raw = localStorage.getItem("user");
+
+    if (raw) {
+      try {
+        const u: StoredUser = JSON.parse(raw);
+
+        if (u.loginMethod === "google") {
+          setIsGoogleSession(true);
+          return; // no consultamos perfil
+        }
+      } catch (err) {
+        console.error("Error leyendo user de localStorage:", err);
+      }
     }
+
+    // Solo si no es sesión Google consultamos al backend
+    fetchCurrentMethod();
   }, []);
 
   const fetchCurrentMethod = async () => {
     try {
       const token = localStorage.getItem("token");
+      if (!token) return;
+
       const res = await API.get("/user/profile", {
         headers: { Authorization: `Bearer ${token}` },
       });
 
+      console.log("🔍 Perfil recibido en ConfiguracionPage:", res.data);
+
       if (res.data?.authMethod) {
         setSelectedMethod(res.data.authMethod);
       }
-    } catch (err) {
-      console.error("Error al obtener método actual:", err);
+    } catch (err: any) {
+      console.error(" Error al obtener método actual:", err);
     }
   };
 
   const handleUpdateMethod = async () => {
+    if (isGoogleSession) {
+      alert(
+        "No puedes cambiar el método de verificación porque iniciaste sesión con Google.\n\n" +
+          "Cierra sesión e inicia con tu correo y contraseña para modificar esta configuración."
+      );
+      return;
+    }
+
     try {
+      setLoading(true);
       const token = localStorage.getItem("token");
+      if (!token) {
+        alert("No se encontró la sesión. Inicia sesión de nuevo.");
+        return;
+      }
+
+      // 1) Actualizar método
       await API.patch(
         "/user/update-auth-method",
         { authMethod: selectedMethod },
         { headers: { Authorization: `Bearer ${token}` } }
       );
-            if (selectedMethod === "totp") {
-            const res = await API.post("/auth/generate-totp", { email });
-            const qrImage = await QRCode.toDataURL(res.data.otpauth_url); // ✅ Usa otpauth_url
-            setQR(qrImage);
-            } else {
-            setQR(null);
-            }
 
+      // 2) Si es TOTP, generar QR
+      if (selectedMethod === "totp") {
+        const res = await API.post(
+          "/auth/generate-totp",
+          {},
+          { headers: { Authorization: `Bearer ${token}` } }
+        );
+
+        const qrImage = await QRCode.toDataURL(res.data.otpauth_url);
+        setQR(qrImage);
+      } else {
+        setQR(null);
+      }
 
       alert("Método actualizado correctamente");
-    } catch (err) {
+    } catch (err: any) {
       console.error(err);
-      alert("Error al actualizar método");
+      alert(
+        err.response?.data?.error ||
+          "Error al actualizar método de autenticación"
+      );
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -60,11 +112,20 @@ export default function ConfiguracionPage() {
     <div className="config-container">
       <h2>Configurar Verificación en Dos Pasos</h2>
 
+      {isGoogleSession && (
+        <p className="config-warning">
+          ⚠️ Has iniciado sesión con <strong>Google</strong>. Para cambiar tu
+          método de verificación, cierra sesión e inicia con tu{" "}
+          <strong>correo y contraseña</strong>.
+        </p>
+      )}
+
       <div className="config-options">
         <label>
           <select
             value={selectedMethod}
             onChange={(e) => setSelectedMethod(e.target.value)}
+            disabled={isGoogleSession || loading}
           >
             <option value="normal">🔓 Solo contraseña</option>
             <option value="otp">📩 Código por correo</option>
@@ -74,8 +135,16 @@ export default function ConfiguracionPage() {
         </label>
       </div>
 
-      <button className="btn-disable" onClick={handleUpdateMethod}>
-        Guardar método
+      <button
+        className="btn-disable"
+        onClick={handleUpdateMethod}
+        disabled={isGoogleSession || loading}
+      >
+        {isGoogleSession
+          ? "Bloqueado (sesión con Google)"
+          : loading
+          ? "Guardando..."
+          : "Guardar método"}
       </button>
 
       {selectedMethod === "totp" && qr && (

@@ -1,17 +1,11 @@
 // src/context/AuthProvider.tsx
 import { useState, useEffect } from "react";
-import { AuthContext } from "./AuthContext";
+import { AuthContext, type User } from "./AuthContext"; // 👈 IMPORTA User de aquí
 import type { ReactNode } from "react";
-
-interface User {
-  id: string;
-  email: string;
-  rol: "cliente" | "entrenador" | "admin";
-}
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
-  const [isLoading, setIsLoading] = useState(true); // 🟡 nuevo
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     const storedUser = localStorage.getItem("user");
@@ -23,7 +17,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         setUser(null);
       }
     }
-    setIsLoading(false); // ✅ terminamos de cargar
+    setIsLoading(false);
   }, []);
 
   const logout = () => {
@@ -32,7 +26,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     setUser(null);
   };
 
-  if (isLoading) return null; // ⛔️ no renderices nada hasta que sepamos si hay usuario
+  if (isLoading) return null;
 
   return (
     <AuthContext.Provider value={{ user, setUser, logout }}>
