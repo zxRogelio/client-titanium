@@ -23,14 +23,14 @@ import NewPassword from "./pages/NewPassword";
 import OAuthCallbackPage from "./pages/OAuthCallbackPage";
 
 
-
 export default function App() {
+              console.log("🚀 App montada en producción");
+
   return (
     <BrowserRouter basename="/titanium">
       <AuthProvider>
         <Routes>
           <Route element={<Layout />}>
-            console.log("🚀 App montada en producción");
             <Route path="/" element={<HomePage />} />
             <Route path="/oauth-callback" element={<OAuthCallbackPage />} />
             <Route path="/login" element={<LoginPage />} />
