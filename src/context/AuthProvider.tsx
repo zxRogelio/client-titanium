@@ -1,9 +1,10 @@
 // src/context/AuthProvider.tsx
 import { useState, useEffect, useRef, useCallback } from "react";
-import { AuthContext, type User } from "./AuthContext";
+import { AuthContext } from "./AuthContext";
 import type { ReactNode } from "react";
+import type { User } from "./AuthContext";
 
-const INACTIVITY_LIMIT_MS = 1 * 60000; // ⏱️ 1 minuto (para pruebas)
+const INACTIVITY_LIMIT_MS = 60000; // 1 minuto (para pruebas)
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
@@ -33,12 +34,13 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     }, INACTIVITY_LIMIT_MS);
   }, [clearInactivityTimer, logout]);
 
-  // Cargar usuario al inicio
+  // Cargar usuario al iniciar
   useEffect(() => {
     const storedUser = localStorage.getItem("user");
     if (storedUser) {
       try {
-        setUser(JSON.parse(storedUser));
+        const parsed = JSON.parse(storedUser) as User;
+        setUser(parsed);
       } catch (err) {
         console.error("Error parsing user from localStorage", err);
         setUser(null);
@@ -47,7 +49,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     setIsLoading(false);
   }, []);
 
-  // Inactividad: solo si hay usuario logueado
+  // Timer de inactividad: solo corre si hay usuario
   useEffect(() => {
     if (!user) {
       clearInactivityTimer();
