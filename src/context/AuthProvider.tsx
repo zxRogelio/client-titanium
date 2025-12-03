@@ -3,13 +3,12 @@ import { useState, useEffect, useRef, useCallback } from "react";
 import { AuthContext, type User } from "./AuthContext";
 import type { ReactNode } from "react";
 
-const INACTIVITY_LIMIT_MS = 1 * 60000; 
+const INACTIVITY_LIMIT_MS = 1 * 60000; // ⏱️ 1 minuto (para pruebas)
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
-  // guardamos el id del timeout de inactividad
   const inactivityTimerRef = useRef<number | null>(null);
 
   const clearInactivityTimer = useCallback(() => {
@@ -34,7 +33,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     }, INACTIVITY_LIMIT_MS);
   }, [clearInactivityTimer, logout]);
 
-  // Cargar usuario desde localStorage al iniciar
+  // Cargar usuario al inicio
   useEffect(() => {
     const storedUser = localStorage.getItem("user");
     if (storedUser) {
@@ -48,14 +47,13 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     setIsLoading(false);
   }, []);
 
-  // Lógica de inactividad: solo si hay usuario logueado
+  // Inactividad: solo si hay usuario logueado
   useEffect(() => {
     if (!user) {
       clearInactivityTimer();
       return;
     }
 
-    // arranca el contador
     startInactivityTimer();
 
     const resetTimer = () => {
