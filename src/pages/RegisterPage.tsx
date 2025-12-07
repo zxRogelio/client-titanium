@@ -18,7 +18,6 @@ export default function RegisterPage() {
   const [errorMessage, setErrorMessage] = useState("");
   const [loading, setLoading] = useState(false);
 
-  // ✅ Estado para checklist dinámico de contraseña
   const [passwordChecks, setPasswordChecks] = useState({
     length: false,
     upper: false,
@@ -33,15 +32,12 @@ export default function RegisterPage() {
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
-  const validateEmail = (email: string) => {
-    return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
-  };
+  const validateEmail = (email: string) =>
+    /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
 
-  // 🔐 Misma política que backend: 8+ chars, mayúscula, minúscula, número y símbolo
   const passwordRegex =
     /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[\W_]).{8,}$/;
 
-  // ✅ Cada vez que cambie la contraseña, actualizamos el checklist
   const handlePasswordChange = (value: string) => {
     setPassword(value);
 
@@ -64,7 +60,6 @@ export default function RegisterPage() {
     }
 
     if (!passwordRegex.test(password)) {
-      // ❗ AHORA SE MUESTRA COMO ALERTA, NO COMO TEXTO ABAJO
       alert(
         "La contraseña debe tener al menos 8 caracteres e incluir una mayúscula, una minúscula, un número y un símbolo."
       );
@@ -89,9 +84,7 @@ export default function RegisterPage() {
         role: "cliente",
       });
 
-      alert(
-        "Registro exitoso. Revisa tu correo para confirmar tu cuenta."
-      );
+      alert("Registro exitoso. Revisa tu correo para confirmar tu cuenta.");
       navigate("/login");
     } catch (err) {
       console.error("Error al registrar:", err);
@@ -105,7 +98,6 @@ export default function RegisterPage() {
     }
   };
 
-  // 🔧 Función auxiliar para pintar el checklist
   const renderCheckItem = (ok: boolean, text: string) => (
     <li
       style={{
@@ -144,8 +136,7 @@ export default function RegisterPage() {
             <div className="auth-form-container">
               <h1 className="auth-title">Crear Cuenta</h1>
               <p className="auth-subtitle">
-                Regístrate en Titanium Sport Gym y comienza tu
-                transformación
+                Regístrate en Titanium Sport Gym y comienza tu transformación
               </p>
 
               <form className="auth-form" onSubmit={handleRegister}>
@@ -197,7 +188,7 @@ export default function RegisterPage() {
                     </button>
                   </div>
 
-                  {/* ✅ Checklist dinámico de requisitos */}
+                  {/* ✅ Checklist en tiempo real */}
                   <ul
                     style={{
                       listStyle: "none",
@@ -226,7 +217,7 @@ export default function RegisterPage() {
                       "Contiene un símbolo (ej. !, $, #, ?)"
                     )}
                   </ul>
-                </div>
+                </div />
 
                 {/* Confirmar contraseña */}
                 <div className="auth-input-group">
@@ -261,7 +252,7 @@ export default function RegisterPage() {
                   </div>
                 </div>
 
-                {/* Términos y condiciones */}
+                {/* Términos */}
                 <div className="auth-row">
                   <label className="auth-remember">
                     <input
