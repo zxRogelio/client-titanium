@@ -22,10 +22,12 @@ import VerifyResetCode from "./pages/VerifyResetCode";
 import NewPassword from "./pages/NewPassword";
 import OAuthCallbackPage from "./pages/OAuthCallbackPage";
 import TermsAndConditionsPage from "./pages/TermsAndConditionsPage";
+import PrivacyPolicyPage from "./pages/PrivacyPolicyPage";
+
+
 
 
 export default function App() {
-              console.log("🚀 App montada en producción");
 
   return (
     <BrowserRouter>
@@ -53,6 +55,7 @@ export default function App() {
             <Route path="/verify-reset" element={<VerifyResetCode />} />
             <Route path="/new-password" element={<NewPassword />} />
             <Route path="/terms" element={<TermsAndConditionsPage />} />
+            <Route path="/aviso-privacidad" element={<PrivacyPolicyPage />} />
           </Route>
 
           <Route path="*" element={<Navigate to="/" replace />} />
