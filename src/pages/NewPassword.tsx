@@ -6,7 +6,7 @@ import { Eye, EyeOff } from "lucide-react";
 import { useState } from "react";
 
 export default function NewPassword() {
-  const { register, handleSubmit } = useForm();
+  const { register, handleSubmit, watch } = useForm();
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -17,9 +17,23 @@ export default function NewPassword() {
   const email = location.state?.email;
   const otp = location.state?.otp;
 
+  // 🔍 Valores en tiempo real desde react-hook-form
+  const passwordValue = watch("password", "");
+  const confirmPasswordValue = watch("confirmPassword", "");
+
   // 🔐 misma política que en RegisterPage
   const passwordRegex =
     /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[\W_]).{8,}$/;
+
+  // Reglas individuales para el checklist
+  const lengthOk = passwordValue.length >= 8;
+  const hasUpper = /[A-Z]/.test(passwordValue);
+  const hasLower = /[a-z]/.test(passwordValue);
+  const hasNumber = /\d/.test(passwordValue);
+  const hasSymbol = /[\W_]/.test(passwordValue);
+
+  const ruleClass = (ok: boolean) =>
+    "password-rule " + (ok ? "password-rule-ok" : "password-rule-bad");
 
   const onSubmit = async (data: any) => {
     try {
@@ -114,10 +128,25 @@ export default function NewPassword() {
                   {showPassword ? <EyeOff /> : <Eye />}
                 </button>
               </div>
-              <p className="auth-help-text">
-                Mínimo 8 caracteres, con al menos una mayúscula, una minúscula,
-                un número y un símbolo.
-              </p>
+
+              {/* ✅ Checklist en tiempo real */}
+              <ul className="password-rules-list">
+                <li className={ruleClass(lengthOk)}>
+                  {lengthOk ? "✔" : "•"} Mínimo 8 caracteres
+                </li>
+                <li className={ruleClass(hasUpper)}>
+                  {hasUpper ? "✔" : "•"} Al menos una letra mayúscula
+                </li>
+                <li className={ruleClass(hasLower)}>
+                  {hasLower ? "✔" : "•"} Al menos una letra minúscula
+                </li>
+                <li className={ruleClass(hasNumber)}>
+                  {hasNumber ? "✔" : "•"} Al menos un número
+                </li>
+                <li className={ruleClass(hasSymbol)}>
+                  {hasSymbol ? "✔" : "•"} Al menos un símbolo
+                </li>
+              </ul>
             </div>
 
             {/* Confirmar contraseña */}
@@ -144,6 +173,21 @@ export default function NewPassword() {
                   {showConfirmPassword ? <EyeOff /> : <Eye />}
                 </button>
               </div>
+
+              {/* Mensaje de coincidencia */}
+              {confirmPasswordValue.length > 0 && (
+                <p
+                  className={
+                    passwordValue === confirmPasswordValue
+                      ? "password-match-ok"
+                      : "password-match-bad"
+                  }
+                >
+                  {passwordValue === confirmPasswordValue
+                    ? "✅ Las contraseñas coinciden"
+                    : "⚠️ Las contraseñas aún no coinciden"}
+                </p>
+              )}
             </div>
 
             <button type="submit" className="auth-btn-primary">
