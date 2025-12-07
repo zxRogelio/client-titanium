@@ -27,6 +27,20 @@ export default function RegisterPage() {
     return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
   };
 
+  // 🔍 Chequeos en tiempo real de la contraseña
+  const lengthOk = password.length >= 8;
+  const hasUpper = /[A-Z]/.test(password);
+  const hasLower = /[a-z]/.test(password);
+  const hasNumber = /\d/.test(password);
+  const hasSymbol = /[\W_]/.test(password);
+
+  const passwordRegex =
+    /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[\W_]).{8,}$/;
+
+  // helper para la clase de cada regla
+  const ruleClass = (ok: boolean) =>
+    "password-rule " + (ok ? "password-rule-ok" : "password-rule-bad");
+
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
     setErrorMessage("");
@@ -36,19 +50,9 @@ export default function RegisterPage() {
       return;
     }
 
-    // 🔐 Política alineada con el backend:
-    // Mínimo 8 caracteres, mayúscula, minúscula, número y símbolo.
-    if (password.length < 8) {
-      setErrorMessage("La contraseña debe tener al menos 8 caracteres");
-      return;
-    }
-
-    const passwordRegex =
-      /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[\W_]).{8,}$/;
-
     if (!passwordRegex.test(password)) {
       setErrorMessage(
-        "La contraseña debe incluir al menos una mayúscula, una minúscula, un número y un símbolo"
+        "La contraseña debe tener al menos 8 caracteres e incluir una mayúscula, una minúscula, un número y un símbolo"
       );
       return;
     }
@@ -68,7 +72,7 @@ export default function RegisterPage() {
       await API.post("/auth/register", {
         email,
         password,
-        role: "cliente", // si tu backend usa 'role', aquí lo ajustas después
+        role: "cliente",
       });
 
       alert(
@@ -111,6 +115,7 @@ export default function RegisterPage() {
                   <div className="auth-error">{errorMessage}</div>
                 )}
 
+                {/* Email */}
                 <div className="auth-input-group">
                   <label className="auth-label" htmlFor="email">
                     Correo Electrónico
@@ -129,6 +134,7 @@ export default function RegisterPage() {
                   </div>
                 </div>
 
+                {/* Contraseña */}
                 <div className="auth-input-group">
                   <label className="auth-label" htmlFor="password">
                     Contraseña
@@ -152,13 +158,28 @@ export default function RegisterPage() {
                       {showPassword ? "🙈" : "👁️"}
                     </button>
                   </div>
-                  {/* Texto de ayuda sobre la política de contraseña */}
-                  <p className="auth-help-text">
-                    Mínimo 8 caracteres, con al menos una mayúscula, una
-                    minúscula, un número y un símbolo.
-                  </p>
+
+                  {/* ✅ Checklist en tiempo real */}
+                  <ul className="password-rules-list">
+                    <li className={ruleClass(lengthOk)}>
+                      {lengthOk ? "✔" : "•"} Mínimo 8 caracteres
+                    </li>
+                    <li className={ruleClass(hasUpper)}>
+                      {hasUpper ? "✔" : "•"} Al menos una letra mayúscula
+                    </li>
+                    <li className={ruleClass(hasLower)}>
+                      {hasLower ? "✔" : "•"} Al menos una letra minúscula
+                    </li>
+                    <li className={ruleClass(hasNumber)}>
+                      {hasNumber ? "✔" : "•"} Al menos un número
+                    </li>
+                    <li className={ruleClass(hasSymbol)}>
+                      {hasSymbol ? "✔" : "•"} Al menos un símbolo
+                    </li>
+                  </ul>
                 </div>
 
+                {/* Confirmar contraseña */}
                 <div className="auth-input-group">
                   <label
                     className="auth-label"
@@ -187,8 +208,24 @@ export default function RegisterPage() {
                       {showConfirmPassword ? "🙈" : "👁️"}
                     </button>
                   </div>
+
+                  {/* Opcional: mensaje de coincidencia */}
+                  {confirmPassword.length > 0 && (
+                    <p
+                      className={
+                        password === confirmPassword
+                          ? "password-match-ok"
+                          : "password-match-bad"
+                      }
+                    >
+                      {password === confirmPassword
+                        ? "✅ Las contraseñas coinciden"
+                        : "⚠️ Las contraseñas aún no coinciden"}
+                    </p>
+                  )}
                 </div>
 
+                {/* Términos */}
                 <div className="auth-row">
                   <label className="auth-remember">
                     <input
