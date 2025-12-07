@@ -1,3 +1,4 @@
+// src/pages/RegisterPage.tsx
 import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import axios from "axios";
@@ -17,6 +18,15 @@ export default function RegisterPage() {
   const [errorMessage, setErrorMessage] = useState("");
   const [loading, setLoading] = useState(false);
 
+  // ✅ Estado para checklist dinámico de contraseña
+  const [passwordChecks, setPasswordChecks] = useState({
+    length: false,
+    upper: false,
+    lower: false,
+    number: false,
+    symbol: false,
+  });
+
   useEffect(() => {
     const handleScroll = () => setScrolled(window.scrollY > 20);
     window.addEventListener("scroll", handleScroll);
@@ -27,19 +37,22 @@ export default function RegisterPage() {
     return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
   };
 
-  // 🔍 Chequeos en tiempo real de la contraseña
-  const lengthOk = password.length >= 8;
-  const hasUpper = /[A-Z]/.test(password);
-  const hasLower = /[a-z]/.test(password);
-  const hasNumber = /\d/.test(password);
-  const hasSymbol = /[\W_]/.test(password);
-
+  // 🔐 Misma política que backend: 8+ chars, mayúscula, minúscula, número y símbolo
   const passwordRegex =
     /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[\W_]).{8,}$/;
 
-  // helper para la clase de cada regla
-  const ruleClass = (ok: boolean) =>
-    "password-rule " + (ok ? "password-rule-ok" : "password-rule-bad");
+  // ✅ Cada vez que cambie la contraseña, actualizamos el checklist
+  const handlePasswordChange = (value: string) => {
+    setPassword(value);
+
+    setPasswordChecks({
+      length: value.length >= 8,
+      upper: /[A-Z]/.test(value),
+      lower: /[a-z]/.test(value),
+      number: /\d/.test(value),
+      symbol: /[\W_]/.test(value),
+    });
+  };
 
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -51,8 +64,9 @@ export default function RegisterPage() {
     }
 
     if (!passwordRegex.test(password)) {
-      setErrorMessage(
-        "La contraseña debe tener al menos 8 caracteres e incluir una mayúscula, una minúscula, un número y un símbolo"
+      // ❗ AHORA SE MUESTRA COMO ALERTA, NO COMO TEXTO ABAJO
+      alert(
+        "La contraseña debe tener al menos 8 caracteres e incluir una mayúscula, una minúscula, un número y un símbolo."
       );
       return;
     }
@@ -91,6 +105,30 @@ export default function RegisterPage() {
     }
   };
 
+  // 🔧 Función auxiliar para pintar el checklist
+  const renderCheckItem = (ok: boolean, text: string) => (
+    <li
+      style={{
+        display: "flex",
+        alignItems: "center",
+        gap: "6px",
+        fontSize: "13px",
+        color: ok ? "#16a34a" : "#777",
+      }}
+    >
+      <span
+        style={{
+          width: "8px",
+          height: "8px",
+          borderRadius: "50%",
+          backgroundColor: ok ? "#16a34a" : "#ccc",
+          display: "inline-block",
+        }}
+      />
+      <span>{text}</span>
+    </li>
+  );
+
   return (
     <div className="auth-layout">
       <main className="auth-main">
@@ -115,7 +153,7 @@ export default function RegisterPage() {
                   <div className="auth-error">{errorMessage}</div>
                 )}
 
-                {/* Email */}
+                {/* Correo */}
                 <div className="auth-input-group">
                   <label className="auth-label" htmlFor="email">
                     Correo Electrónico
@@ -148,7 +186,7 @@ export default function RegisterPage() {
                       autoComplete="new-password"
                       required
                       value={password}
-                      onChange={(e) => setPassword(e.target.value)}
+                      onChange={(e) => handlePasswordChange(e.target.value)}
                     />
                     <button
                       type="button"
@@ -159,23 +197,34 @@ export default function RegisterPage() {
                     </button>
                   </div>
 
-                  {/* ✅ Checklist en tiempo real */}
-                  <ul className="password-rules-list">
-                    <li className={ruleClass(lengthOk)}>
-                      {lengthOk ? "✔" : "•"} Mínimo 8 caracteres
-                    </li>
-                    <li className={ruleClass(hasUpper)}>
-                      {hasUpper ? "✔" : "•"} Al menos una letra mayúscula
-                    </li>
-                    <li className={ruleClass(hasLower)}>
-                      {hasLower ? "✔" : "•"} Al menos una letra minúscula
-                    </li>
-                    <li className={ruleClass(hasNumber)}>
-                      {hasNumber ? "✔" : "•"} Al menos un número
-                    </li>
-                    <li className={ruleClass(hasSymbol)}>
-                      {hasSymbol ? "✔" : "•"} Al menos un símbolo
-                    </li>
+                  {/* ✅ Checklist dinámico de requisitos */}
+                  <ul
+                    style={{
+                      listStyle: "none",
+                      paddingLeft: 0,
+                      marginTop: "8px",
+                    }}
+                  >
+                    {renderCheckItem(
+                      passwordChecks.length,
+                      "Al menos 8 caracteres"
+                    )}
+                    {renderCheckItem(
+                      passwordChecks.upper,
+                      "Contiene una letra mayúscula"
+                    )}
+                    {renderCheckItem(
+                      passwordChecks.lower,
+                      "Contiene una letra minúscula"
+                    )}
+                    {renderCheckItem(
+                      passwordChecks.number,
+                      "Contiene un número"
+                    )}
+                    {renderCheckItem(
+                      passwordChecks.symbol,
+                      "Contiene un símbolo (ej. !, $, #, ?)"
+                    )}
                   </ul>
                 </div>
 
@@ -203,29 +252,16 @@ export default function RegisterPage() {
                     <button
                       type="button"
                       className="auth-eye-btn"
-                      onClick={() => setShowConfirmPassword((v) => !v)}
+                      onClick={() =>
+                        setShowConfirmPassword((v) => !v)
+                      }
                     >
                       {showConfirmPassword ? "🙈" : "👁️"}
                     </button>
                   </div>
-
-                  {/* Opcional: mensaje de coincidencia */}
-                  {confirmPassword.length > 0 && (
-                    <p
-                      className={
-                        password === confirmPassword
-                          ? "password-match-ok"
-                          : "password-match-bad"
-                      }
-                    >
-                      {password === confirmPassword
-                        ? "✅ Las contraseñas coinciden"
-                        : "⚠️ Las contraseñas aún no coinciden"}
-                    </p>
-                  )}
                 </div>
 
-                {/* Términos */}
+                {/* Términos y condiciones */}
                 <div className="auth-row">
                   <label className="auth-remember">
                     <input
@@ -238,9 +274,14 @@ export default function RegisterPage() {
                     />
                     <span>
                       Acepto los{" "}
-                      <a href="#" className="auth-link">
+                      <Link
+                        to="/terms"
+                        className="auth-link"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                      >
                         términos y condiciones
-                      </a>
+                      </Link>
                     </span>
                   </label>
                 </div>
