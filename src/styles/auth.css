@@ -849,3 +849,40 @@ body {
   width: 18px;
   height: 18px;
 }
+.password-rules-list {
+  margin-top: 8px;
+  margin-bottom: 4px;
+  padding-left: 18px;
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+.password-rule {
+  list-style: none;
+  transition: color 0.2s ease;
+}
+
+/* Cuando NO se cumple la regla */
+.password-rule-bad {
+  color: #9ca3af; /* gris clarito */
+}
+
+/* Cuando SÍ se cumple la regla */
+.password-rule-ok {
+  color: #16a34a; /* verde tipo success */
+  font-weight: 500;
+}
+
+/* Mensaje de coincidencia de contraseñas */
+.password-match-ok {
+  margin-top: 4px;
+  font-size: 12px;
+  color: #16a34a;
+}
+
+.password-match-bad {
+  margin-top: 4px;
+  font-size: 12px;
+  color: #f97316; /* naranja/advertencia */
+}
+
