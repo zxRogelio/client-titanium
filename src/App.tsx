@@ -21,6 +21,7 @@ import ForgotPassword from "./pages/ForgotPassword";
 import VerifyResetCode from "./pages/VerifyResetCode";
 import NewPassword from "./pages/NewPassword";
 import OAuthCallbackPage from "./pages/OAuthCallbackPage";
+import TermsAndConditionsPage from "./pages/TermsAndConditionsPage";
 
 
 export default function App() {
@@ -51,6 +52,7 @@ export default function App() {
             <Route path="/forgot-password" element={<ForgotPassword />} />
             <Route path="/verify-reset" element={<VerifyResetCode />} />
             <Route path="/new-password" element={<NewPassword />} />
+            <Route path="/terms" element={<TermsAndConditionsPage />} />
           </Route>
 
           <Route path="*" element={<Navigate to="/" replace />} />
