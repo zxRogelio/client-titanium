@@ -15,8 +15,16 @@ export default function LoginPage() {
   const [errorMessage, setErrorMessage] = useState("");
   const [loading, setLoading] = useState(false);
 
+  // 🔒 Bloqueo por demasiados intentos
+  const [lockSeconds, setLockSeconds] = useState<number | null>(null);
+  const [lockedEmail, setLockedEmail] = useState<string | null>(null);
+
   const navigate = useNavigate();
   const { setUser } = useAuth();
+
+  // ¿Está bloqueado el login para este correo?
+  const isLocked =
+    lockSeconds !== null && lockSeconds > 0 && lockedEmail === email;
 
   useEffect(() => {
     const handleScroll = () => setScrolled(window.scrollY > 20);
@@ -24,9 +32,35 @@ export default function LoginPage() {
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
+  // ⏱️ Contador regresivo para lockSeconds
+  useEffect(() => {
+    if (lockSeconds === null || lockSeconds <= 0) return;
+
+    const interval = window.setInterval(() => {
+      setLockSeconds((prev) => {
+        if (prev === null) return null;
+        if (prev <= 1) {
+          return null; // se termina el bloqueo
+        }
+        return prev - 1;
+      });
+    }, 1000);
+
+    return () => window.clearInterval(interval);
+  }, [lockSeconds]);
+
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setErrorMessage("");
+
+    // Si está bloqueado este correo, no mandamos la petición
+    if (isLocked) {
+      setErrorMessage(
+        `Tu cuenta ${email} está bloqueada temporalmente. Espera ${lockSeconds ?? 0} segundos.`
+      );
+      return;
+    }
+
     setLoading(true);
 
     try {
@@ -57,22 +91,19 @@ export default function LoginPage() {
       const { accessToken, user } = res.data;
 
       if (accessToken && user) {
-        // role viene a veces como 'role' y a veces como 'rol'
         const userRole = user.role || user.rol || "cliente";
 
-        // 🔹 Usuario que guardamos EN EL FRONT
         const userForStorage = {
           id: user.id,
           email: user.email,
           rol: userRole as "cliente" | "entrenador" | "admin",
-          loginMethod: "local" as const, // 👈 MUY IMPORTANTE
+          loginMethod: "local" as const,
         };
 
         localStorage.setItem("token", accessToken);
         localStorage.setItem("user", JSON.stringify(userForStorage));
         setUser(userForStorage);
 
-        // Redirección por rol
         switch (userRole) {
           case "cliente":
             navigate("/cliente");
@@ -95,8 +126,18 @@ export default function LoginPage() {
         const status = err.response?.status;
 
         if (status === 429) {
+          // 🚫 Demasiados intentos: backend puede mandar retryAfterSeconds o retryAfter
+          const serverSeconds =
+            err.response?.data?.retryAfterSeconds ??
+            err.response?.data?.retryAfter ??
+            60; // valor por defecto
+
+          setLockedEmail(email);
+          setLockSeconds(serverSeconds);
+
           setErrorMessage(
-            "Has intentado iniciar sesión demasiadas veces. Intenta de nuevo más tarde."
+            `Has intentado iniciar sesión demasiadas veces con ${email}. ` +
+              `Espera ${serverSeconds} segundos antes de volver a intentarlo.`
           );
         } else if (status === 400 || status === 401) {
           setErrorMessage("Correo o contraseña incorrectos.");
@@ -138,8 +179,17 @@ export default function LoginPage() {
               </p>
 
               <form className="auth-form" onSubmit={handleLogin}>
+                {/* Mensaje de error */}
                 {errorMessage && (
-                  <div className="auth-error">{errorMessage}</div>
+                  <div className="auth-error">
+                    {errorMessage}
+                    {isLocked && (
+                      <div style={{ marginTop: "4px", fontSize: "14px" }}>
+                        Tiempo restante:{" "}
+                        <strong>{lockSeconds ?? 0} segundos</strong>
+                      </div>
+                    )}
+                  </div>
                 )}
 
                 {/* Email */}
@@ -162,6 +212,8 @@ export default function LoginPage() {
                       onChange={(e) => setEmail(e.target.value)}
                       autoComplete="email"
                       required
+                      // ⬇️ NO lo deshabilitamos para que pueda cambiar a otra cuenta
+                      // disabled={isLocked}
                     />
                   </div>
                 </div>
@@ -187,6 +239,7 @@ export default function LoginPage() {
                       onChange={(e) => setPassword(e.target.value)}
                       autoComplete="current-password"
                       required
+                      disabled={isLocked}
                     />
                     <button
                       type="button"
@@ -212,9 +265,13 @@ export default function LoginPage() {
                 <button
                   type="submit"
                   className="auth-btn-primary"
-                  disabled={loading}
+                  disabled={loading || isLocked}
                 >
-                  {loading ? "Iniciando..." : "Iniciar Sesión"}
+                  {isLocked
+                    ? "Cuenta bloqueada temporalmente"
+                    : loading
+                    ? "Iniciando..."
+                    : "Iniciar Sesión"}
                 </button>
 
                 {/* 🔹 Botón Google */}
