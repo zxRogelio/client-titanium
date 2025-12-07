@@ -12,7 +12,6 @@ export default function NewPassword() {
 
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-  const [errorMessage, setErrorMessage] = useState("");
 
   const email = location.state?.email;
   const otp = location.state?.otp;
@@ -37,13 +36,11 @@ export default function NewPassword() {
 
   const onSubmit = async (data: any) => {
     try {
-      setErrorMessage("");
-
       const { password, confirmPassword } = data;
 
       // Validar fuerza de la contraseña
       if (!passwordRegex.test(password)) {
-        setErrorMessage(
+        alert(
           "La contraseña debe tener al menos 8 caracteres e incluir una mayúscula, una minúscula, un número y un símbolo."
         );
         return;
@@ -51,13 +48,13 @@ export default function NewPassword() {
 
       // Validar que coincidan
       if (password !== confirmPassword) {
-        setErrorMessage("Las contraseñas no coinciden");
+        alert("Las contraseñas no coinciden");
         return;
       }
 
       // Validar que haya email y otp (por si alguien entra directo a la URL)
       if (!email || !otp) {
-        setErrorMessage(
+        alert(
           "Faltan datos de recuperación. Vuelve a iniciar el proceso de recuperación de contraseña."
         );
         return;
@@ -72,9 +69,9 @@ export default function NewPassword() {
       alert("Contraseña actualizada correctamente");
       navigate("/login");
     } catch (err: any) {
-      console.error("Error al cambiar contraseña:", err.response?.data || err);
-      setErrorMessage(
-        err.response?.data?.error || "Error al cambiar contraseña"
+      console.error("Error al cambiar contraseña:", err?.response?.data || err);
+      alert(
+        err?.response?.data?.error || "Error al cambiar contraseña"
       );
     }
   };
@@ -98,10 +95,6 @@ export default function NewPassword() {
           <p className="auth-subtitle">
             Introduce una contraseña nueva para acceder a tu cuenta Titanium Sport Gym
           </p>
-
-          {errorMessage && (
-            <div className="auth-error">{errorMessage}</div>
-          )}
 
           <form onSubmit={handleSubmit(onSubmit)} className="auth-form">
             {/* Nueva contraseña */}
