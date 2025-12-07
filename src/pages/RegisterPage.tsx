@@ -188,7 +188,7 @@ export default function RegisterPage() {
                     </button>
                   </div>
 
-                  {/* ✅ Checklist en tiempo real */}
+                  {/* Checklist en tiempo real */}
                   <ul
                     style={{
                       listStyle: "none",
@@ -217,7 +217,7 @@ export default function RegisterPage() {
                       "Contiene un símbolo (ej. !, $, #, ?)"
                     )}
                   </ul>
-                </div />
+                </div>
 
                 {/* Confirmar contraseña */}
                 <div className="auth-input-group">
@@ -236,16 +236,12 @@ export default function RegisterPage() {
                       autoComplete="new-password"
                       required
                       value={confirmPassword}
-                      onChange={(e) =>
-                        setConfirmPassword(e.target.value)
-                      }
+                      onChange={(e) => setConfirmPassword(e.target.value)}
                     />
                     <button
                       type="button"
                       className="auth-eye-btn"
-                      onClick={() =>
-                        setShowConfirmPassword((v) => !v)
-                      }
+                      onClick={() => setShowConfirmPassword((v) => !v)}
                     >
                       {showConfirmPassword ? "🙈" : "👁️"}
                     </button>
@@ -258,9 +254,7 @@ export default function RegisterPage() {
                     <input
                       type="checkbox"
                       checked={termsAccepted}
-                      onChange={(e) =>
-                        setTermsAccepted(e.target.checked)
-                      }
+                      onChange={(e) => setTermsAccepted(e.target.checked)}
                       required
                     />
                     <span>
