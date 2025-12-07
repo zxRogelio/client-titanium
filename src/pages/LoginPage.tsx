@@ -7,6 +7,13 @@ import { API } from "../api/api";
 import "../styles/auth.css";
 import GoogleLogo from "../assets/google-logo.svg";
 
+interface LoginLock {
+  email: string;
+  lockedUntil: number; // timestamp en ms
+}
+
+const LOGIN_LOCK_KEY = "loginLock";
+
 export default function LoginPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -15,7 +22,7 @@ export default function LoginPage() {
   const [errorMessage, setErrorMessage] = useState("");
   const [loading, setLoading] = useState(false);
 
-  // 🔒 Bloqueo por demasiados intentos
+  // 🔒 Estado de bloqueo
   const [lockSeconds, setLockSeconds] = useState<number | null>(null);
   const [lockedEmail, setLockedEmail] = useState<string | null>(null);
 
@@ -32,6 +39,29 @@ export default function LoginPage() {
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
+  // 🔄 Al montar, revisamos si ya había un lock guardado en localStorage
+  useEffect(() => {
+    const raw = localStorage.getItem(LOGIN_LOCK_KEY);
+    if (!raw) return;
+
+    try {
+      const lock: LoginLock = JSON.parse(raw);
+      const now = Date.now();
+
+      if (lock.lockedUntil > now) {
+        const remaining = Math.ceil((lock.lockedUntil - now) / 1000);
+        setLockedEmail(lock.email);
+        setLockSeconds(remaining);
+      } else {
+        // Ya expiró, limpiamos
+        localStorage.removeItem(LOGIN_LOCK_KEY);
+      }
+    } catch (err) {
+      console.error("Error leyendo loginLock de localStorage:", err);
+      localStorage.removeItem(LOGIN_LOCK_KEY);
+    }
+  }, []);
+
   // ⏱️ Contador regresivo para lockSeconds
   useEffect(() => {
     if (lockSeconds === null || lockSeconds <= 0) return;
@@ -40,7 +70,9 @@ export default function LoginPage() {
       setLockSeconds((prev) => {
         if (prev === null) return null;
         if (prev <= 1) {
-          return null; // se termina el bloqueo
+          // Cuando llega a 0, limpiamos bloqueo
+          localStorage.removeItem(LOGIN_LOCK_KEY);
+          return null;
         }
         return prev - 1;
       });
@@ -102,6 +134,7 @@ export default function LoginPage() {
 
         localStorage.setItem("token", accessToken);
         localStorage.setItem("user", JSON.stringify(userForStorage));
+        localStorage.removeItem(LOGIN_LOCK_KEY); // ✅ si ya entró, quitamos bloqueo
         setUser(userForStorage);
 
         switch (userRole) {
@@ -126,11 +159,20 @@ export default function LoginPage() {
         const status = err.response?.status;
 
         if (status === 429) {
-          // 🚫 Demasiados intentos: backend puede mandar retryAfterSeconds o retryAfter
+          // 🚫 Demasiados intentos: el backend manda retryAfterSeconds
           const serverSeconds =
             err.response?.data?.retryAfterSeconds ??
             err.response?.data?.retryAfter ??
-            60; // valor por defecto
+            60;
+
+          const lockedUntil = Date.now() + serverSeconds * 1000;
+
+          const lock: LoginLock = {
+            email,
+            lockedUntil,
+          };
+
+          localStorage.setItem(LOGIN_LOCK_KEY, JSON.stringify(lock));
 
           setLockedEmail(email);
           setLockSeconds(serverSeconds);
@@ -212,8 +254,6 @@ export default function LoginPage() {
                       onChange={(e) => setEmail(e.target.value)}
                       autoComplete="email"
                       required
-                      // ⬇️ NO lo deshabilitamos para que pueda cambiar a otra cuenta
-                      // disabled={isLocked}
                     />
                   </div>
                 </div>
